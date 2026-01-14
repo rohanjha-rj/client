@@ -1,66 +1,86 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import axios from "axios";
-import { Users, ShoppingBag, CreditCard, TrendingUp, AlertTriangle, CheckCircle, Clock, Activity, Download, RefreshCcw } from "lucide-react";
-import {
-    BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-    PieChart, Pie, Cell, AreaChart, Area
-} from 'recharts';
+import { ShoppingBag, CreditCard, TrendingUp, AlertTriangle, Clock, RefreshCcw, Download, Activity } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { orderAPI } from "@/lib/api";
-
-const COLORS = ['#2C5F2D', '#97BC62', '#DAE5D0', '#483538'];
+import { analyticsAPI, orderAPI } from "@/lib/api";
+import InventoryForecastTable from "@/components/admin/InventoryForecastTable";
+import AnalyticsCharts from "@/components/admin/AnalyticsCharts";
 
 export default function AdminDashboard() {
     const { token } = useAuth();
     const [analytics, setAnalytics] = useState(null);
-    const [inventory, setInventory] = useState([]);
+    const [forecast, setForecast] = useState([]);
     const [recentOrders, setRecentOrders] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [dataLoading, setDataLoading] = useState(true);
 
     const fetchData = async () => {
         if (!token) return;
         try {
-            setLoading(true);
-            const [analyticsRes, inventoryRes, ordersRes] = await Promise.all([
-                axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/analytics/dashboard`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                }),
-                axios.get(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/analytics/inventory`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                }),
+            setDataLoading(true);
+            const [statsRes, forecastRes, ordersRes] = await Promise.all([
+                analyticsAPI.getDashboardStats(),
+                analyticsAPI.getInventoryForecast(),
                 orderAPI.getAll()
             ]);
-            setAnalytics(analyticsRes.data);
-            setInventory(inventoryRes.data);
-            setRecentOrders(ordersRes.data.slice(0, 5));
+
+            setAnalytics(statsRes.data);
+            setForecast(forecastRes.data);
+            // Sort orders by date desc and take top 5
+            const sortedOrders = ordersRes.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            setRecentOrders(sortedOrders.slice(0, 5));
         } catch (error) {
-            console.error("Dashboard fetch failed", error);
+            console.error("Failed to fetch dashboard data", error);
         } finally {
-            setLoading(false);
+            setDataLoading(false);
         }
     };
 
     useEffect(() => {
         fetchData();
+        const interval = setInterval(fetchData, 60000); // Live update every minute
+        return () => clearInterval(interval);
     }, [token]);
 
-    if (loading) return (
-        <div className="flex items-center justify-center min-h-[60vh]">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-preque-earth" />
+    const statCards = [
+        {
+            title: "Total Revenue",
+            value: `₹${(analytics?.totalRevenue || 0).toLocaleString()}`,
+            icon: <CreditCard size={20} />,
+            color: "bg-green-500 text-green-500",
+            change: true
+        },
+        {
+            title: "Paid Orders",
+            value: analytics?.totalOrders || 0,
+            icon: <ShoppingBag size={20} />,
+            color: "bg-blue-500 text-blue-500",
+            change: true
+        },
+        {
+            title: "Active Bag Sessions",
+            value: analytics?.activeCartsCount || 0,
+            icon: <Clock size={20} />,
+            color: "bg-orange-500 text-orange-500",
+            change: false
+        },
+        {
+            title: "Abandoned Rate",
+            value: `${Math.round(((analytics?.abandonedCartsCount || 0) / ((analytics?.totalOrders || 0) + (analytics?.abandonedCartsCount || 0))) * 100 || 0)}%`,
+            icon: <AlertTriangle size={20} />,
+            color: "bg-red-500 text-red-500",
+            change: false
+        },
+    ];
+
+    if (dataLoading && !analytics) return (
+        <div className="flex h-full items-center justify-center animate-pulse text-xs tracking-widest uppercase text-gray-400">
+            Fetching Business Intelligence...
         </div>
     );
 
-    const statCards = [
-        { title: "Total Revenue", value: `₹${analytics?.totalRevenue.toLocaleString()}`, icon: <CreditCard size={20} />, color: "bg-green-500 text-green-500", change: true },
-        { title: "Paid Orders", value: analytics?.totalOrders, icon: <ShoppingBag size={20} />, color: "bg-blue-500 text-blue-500", change: true },
-        { title: "Active Bag Sessions", value: analytics?.activeCartsCount, icon: <Clock size={20} />, color: "bg-orange-500 text-orange-500", change: false },
-        { title: "Abandoned Rate", value: `${Math.round((analytics?.abandonedCartsCount / (analytics?.totalOrders + analytics?.abandonedCartsCount)) * 100 || 0)}%`, icon: <AlertTriangle size={20} />, color: "bg-red-500 text-red-500", change: false },
-    ];
-
     return (
-        <div className="space-y-8 animate-in fade-in duration-700">
+        <div className="space-y-8 animate-in fade-in duration-700 pb-10">
             {/* Header Section */}
             <div className="flex justify-between items-end">
                 <div>
@@ -106,78 +126,15 @@ export default function AdminDashboard() {
 
                         {/* Progress Bar Mockup */}
                         <div className="w-full bg-gray-100 dark:bg-white/5 h-1 mt-4 rounded-full overflow-hidden">
-                            <div className={`h-full ${stat.color} opacity-80 w-[70%] rounded-full`} />
+                            <div className={`h-full ${stat.color.split(' ')[0]} opacity-80 w-[70%] rounded-full`} />
                         </div>
                     </div>
                 ))}
             </div>
 
-            {/* Visual Analytics */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Revenue Trend Chart */}
-                <div className="lg:col-span-2 bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/5 p-8 rounded-sm shadow-sm">
-                    <h4 className="text-xs font-bold uppercase tracking-[0.3em] text-gray-400 mb-10 flex items-center gap-3">
-                        Revenue Trend (Last 7 Days)
-                        <div className="h-[1px] flex-1 bg-gray-100 dark:bg-zinc-800" />
-                    </h4>
-                    <div className="h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={analytics?.revenueTrend}>
-                                <defs>
-                                    <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#2C5F2D" stopOpacity={0.2} />
-                                        <stop offset="95%" stopColor="#2C5F2D" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} strokeOpacity={0.1} />
-                                <XAxis dataKey="_id" fontSize={10} axisLine={false} tickLine={false} tick={{ fill: '#999' }} />
-                                <YAxis fontSize={10} axisLine={false} tickLine={false} tick={{ fill: '#999' }} />
-                                <Tooltip
-                                    contentStyle={{ background: '#111', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '10px' }}
-                                    cursor={{ stroke: '#2C5F2D', strokeWidth: 2 }}
-                                />
-                                <Area type="monotone" dataKey="revenue" stroke="#2C5F2D" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-
-                {/* Categories Pie */}
-                <div className="bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/5 p-8 rounded-sm shadow-sm flex flex-col">
-                    <h4 className="text-xs font-bold uppercase tracking-[0.3em] text-gray-400 mb-10">Product Velocity Mix</h4>
-                    <div className="h-[250px] flex-1">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={analytics?.categoryStats}
-                                    innerRadius={70}
-                                    outerRadius={90}
-                                    paddingAngle={8}
-                                    dataKey="value"
-                                    animationBegin={0}
-                                    animationDuration={1500}
-                                >
-                                    {analytics?.categoryStats.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Pie>
-                                <Tooltip contentStyle={{ background: '#111', border: 'none', borderRadius: '8px', color: '#fff', fontSize: '10px' }} />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
-                    <div className="mt-6 grid grid-cols-2 gap-4">
-                        {analytics?.categoryStats.map((entry, index) => (
-                            <div key={entry._id} className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                                <span className="text-[9px] uppercase tracking-widest text-gray-400 font-bold truncate">{entry._id}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
 
             {/* Inventory Forecasting (Item 15) */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            < div className="grid grid-cols-1 lg:grid-cols-2 gap-8" >
                 <div className="bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/5 p-8 rounded-sm shadow-sm">
                     <div className="flex justify-between items-center mb-10">
                         <h4 className="text-xs font-bold uppercase tracking-[0.3em] text-gray-400">Inventory Liquidity Forecast</h4>
@@ -245,10 +202,10 @@ export default function AdminDashboard() {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
 
             {/* Recent Orders Overview */}
-            <div className="bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/5 rounded-sm shadow-sm overflow-hidden translate-y-0 hover:shadow-xl transition-all duration-500">
+            < div className="bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/5 rounded-sm shadow-sm overflow-hidden translate-y-0 hover:shadow-xl transition-all duration-500" >
                 <div className="p-8 border-b border-black/5 dark:border-white/5 flex justify-between items-center">
                     <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-gray-400">Transaction Manifest</h3>
                     <ShoppingBag size={16} className="text-gray-400" />
@@ -289,13 +246,15 @@ export default function AdminDashboard() {
                         </tbody>
                     </table>
                 </div>
-                {recentOrders.length === 0 && (
-                    <div className="p-20 text-center">
-                        <Activity size={40} className="mx-auto text-gray-200 mb-4" />
-                        <p className="text-xs tracking-widest uppercase text-gray-400 font-bold">No transactions recorded yet</p>
-                    </div>
-                )}
-            </div>
-        </div>
+                {
+                    recentOrders.length === 0 && (
+                        <div className="p-20 text-center">
+                            <Activity size={40} className="mx-auto text-gray-200 mb-4" />
+                            <p className="text-xs tracking-widest uppercase text-gray-400 font-bold">No transactions recorded yet</p>
+                        </div>
+                    )
+                }
+            </div >
+        </div >
     );
 }
