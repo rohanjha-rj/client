@@ -24,9 +24,13 @@ const LoginForm = () => {
         e.preventDefault();
         setError("");
         try {
-            await login(email, password);
+            const user = await login(email, password);
             showToast("Welcome back!", "success");
-            router.push(redirect);
+            if (user.isAdmin) {
+                router.push("/admin");
+            } else {
+                router.push(redirect);
+            }
         } catch (err) {
             const errorMessage = typeof err === 'string' ? err : err?.message || "Login failed";
             setError(errorMessage);

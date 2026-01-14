@@ -11,14 +11,14 @@ export default function AdminLayout({ children }) {
     const router = useRouter();
 
     useEffect(() => {
-        // if (!loading && (!user || !user.isAdmin)) {
-        //     router.push("/login");
-        // }
+        if (!loading && (!user || !user.isAdmin)) {
+            router.push("/login");
+        }
     }, [user, loading, router]);
 
-    // if (loading || !user || !user.isAdmin) {
-    //     return <div className="h-screen flex items-center justify-center font-serif">Verifying Authorisation...</div>;
-    // }
+    if (loading || !user || !user.isAdmin) {
+        return <div className="h-screen flex items-center justify-center font-serif">Verifying Authorisation...</div>;
+    }
 
     return (
         <div className="flex h-screen bg-gray-50">
@@ -58,6 +58,11 @@ export default function AdminLayout({ children }) {
             <main className="flex-1 overflow-y-auto p-12">
                 {children}
             </main>
+
+            {/* DEBUG OVERLAY */}
+            <div className="fixed bottom-4 right-4 bg-black text-white p-4 rounded z-[9999] text-xs max-w-sm overflow-auto">
+                <pre>{JSON.stringify({ user, loading }, null, 2)}</pre>
+            </div>
         </div>
     );
 }
