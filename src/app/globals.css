@@ -1,26 +1,131 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #F5F5DC;
+  --foreground: #1A1A1A;
+  --preque-beige: #F5F5DC;
+  --preque-crema: #EADBC8;
+  --preque-carbon: #1A1A1A;
+  --preque-sage: #4A5D4E;
+  --preque-earth: #7A634A;
+}
+
+.dark {
+  --background: #000000;
+  --foreground: #F5F5DC;
+  --preque-beige: #0a0a0a;
+  /* Deep black instead of absolute zero for backgrounds */
+  --preque-carbon: #F5F5DC;
+  /* Swapped for reactiveness */
+  --preque-crema: #1A1A1A;
+  /* Lighter midnight gray */
+  --preque-sage: #6B8E76;
+  /* Brightened sage for visibility */
+  --preque-earth: #D4B494;
+  /* Lightened earth for better contrast */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-preque-beige: var(--preque-beige);
+  --color-preque-crema: var(--preque-crema);
+  --color-preque-carbon: var(--preque-carbon);
+  --color-preque-sage: var(--preque-sage);
+  --color-preque-earth: var(--preque-earth);
+  --font-serif: var(--font-playfair);
+  --font-sans: var(--font-inter);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
+  transition: background-color 0.5s ease-in-out, color 0.5s ease-in-out;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.dark body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+  opacity: 0.15;
+  z-index: 9999;
+  mix-blend-mode: overlay;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-playfair), serif;
+  letter-spacing: -0.02em;
+}
+
+/* Premium UI Utilities */
+@layer utilities {
+  .btn-interactive {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .btn-interactive:active {
+    transform: scale(0.95);
+  }
+
+  .glass {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .dark .glass {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .text-luxury {
+    background: linear-gradient(135deg, var(--preque-carbon), var(--preque-earth));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+  }
+
+  .card-interactive {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+  }
+
+  .card-interactive:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  }
+
+  .link-interactive {
+    position: relative;
+  }
+
+  .link-interactive::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    height: 1px;
+    width: 0;
+    background: currentColor;
+    transition: width 0.3s ease;
+  }
+
+  .link-interactive:hover::after {
+    width: 100%;
+  }
 }
