@@ -11,6 +11,7 @@ import { Plus } from "lucide-react";
 export default function AdminLayout({ children }) {
     const { user, loading, logout } = useAuth();
     const router = useRouter();
+    const pathname = usePathname();
 
     useEffect(() => {
         if (!loading && (!user || !user.isAdmin)) {
