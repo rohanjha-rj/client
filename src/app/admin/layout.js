@@ -1,10 +1,12 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
-import Link from "next/link";
-import { Package, ShoppingCart, Users, Settings, LogOut, LayoutDashboard } from "lucide-react";
+import AdminSidebar from "@/components/admin/AdminSidebar";
+import AdminHeader from "@/components/admin/AdminHeader";
+import { AnimatePresence, motion } from "framer-motion";
+import { Plus } from "lucide-react";
 
 export default function AdminLayout({ children }) {
     const { user, loading, logout } = useAuth();
@@ -21,47 +23,35 @@ export default function AdminLayout({ children }) {
     }
 
     return (
-        <div className="flex h-screen bg-gray-50">
-            {/* Sidebar */}
-            <aside className="w-64 bg-preque-carbon text-white flex flex-col">
-                <div className="p-8 border-b border-gray-800">
-                    <Link href="/" className="text-2xl font-serif tracking-[0.2em]">PREQUE</Link>
-                    <span className="block text-[10px] tracking-widest text-preque-earth mt-2 uppercase font-bold">Admin Panel</span>
-                </div>
+        <div className="flex h-screen bg-gray-50/50 dark:bg-black text-preque-carbon dark:text-white overflow-hidden selection:bg-preque-earth selection:text-white">
+            <AdminSidebar />
 
-                <nav className="flex-1 p-6 space-y-4">
-                    <Link href="/admin" className="flex items-center gap-4 text-sm font-light hover:text-preque-earth transition-colors">
-                        <LayoutDashboard size={18} /> Dashboard
-                    </Link>
-                    <Link href="/admin/products" className="flex items-center gap-4 text-sm font-light hover:text-preque-earth transition-colors">
-                        <Package size={18} /> Products
-                    </Link>
-                    <Link href="/admin/orders" className="flex items-center gap-4 text-sm font-light hover:text-preque-earth transition-colors">
-                        <ShoppingCart size={18} /> Orders
-                    </Link>
-                    <Link href="/admin/customers" className="flex items-center gap-4 text-sm font-light hover:text-preque-earth transition-colors">
-                        <Users size={18} /> Customers
-                    </Link>
-                </nav>
+            <div className="flex-1 flex flex-col h-screen overflow-hidden relative">
+                <AdminHeader />
 
-                <div className="p-6 border-t border-gray-800">
-                    <button
-                        onClick={() => { logout(); router.push("/login"); }}
-                        className="flex items-center gap-4 text-sm font-light hover:text-red-400 transition-colors"
-                    >
-                        <LogOut size={18} /> Logout
-                    </button>
-                </div>
-            </aside>
+                <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 md:p-12 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-white/10 scrollbar-track-transparent">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={pathname}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3, ease: "easeOut" }}
+                        >
+                            {children}
+                        </motion.div>
+                    </AnimatePresence>
+                </main>
 
-            {/* Main Content */}
-            <main className="flex-1 overflow-y-auto p-12">
-                {children}
-            </main>
-
-            {/* DEBUG OVERLAY */}
-            <div className="fixed bottom-4 right-4 bg-black text-white p-4 rounded z-[9999] text-xs max-w-sm overflow-auto">
-                <pre>{JSON.stringify({ user, loading }, null, 2)}</pre>
+                {/* Floating Quick Action Button */}
+                <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="absolute bottom-10 right-10 w-14 h-14 bg-preque-carbon dark:bg-white text-white dark:text-black rounded-full shadow-2xl flex items-center justify-center z-40 hover:shadow-xl hover:shadow-preque-carbon/20 dark:hover:shadow-white/20 transition-shadow"
+                    title="Quick Add"
+                >
+                    <Plus size={24} />
+                </motion.button>
             </div>
         </div>
     );

@@ -53,44 +53,61 @@ export default function AdminDashboard() {
     );
 
     const statCards = [
-        { title: "Total Revenue", value: `₹${analytics?.totalRevenue.toLocaleString()}`, icon: <CreditCard className="text-white" size={20} />, color: "bg-green-600" },
-        { title: "Paid Orders", value: analytics?.totalOrders, icon: <ShoppingBag className="text-white" size={20} />, color: "bg-blue-600" },
-        { title: "Active Bag Sessions", value: analytics?.activeCartsCount, icon: <Clock className="text-white" size={20} />, color: "bg-orange-500" },
-        { title: "Abandoned Rate", value: `${Math.round((analytics?.abandonedCartsCount / (analytics?.totalOrders + analytics?.abandonedCartsCount)) * 100 || 0)}%`, icon: <AlertTriangle className="text-white" size={20} />, color: "bg-red-500" },
+        { title: "Total Revenue", value: `₹${analytics?.totalRevenue.toLocaleString()}`, icon: <CreditCard size={20} />, color: "bg-green-500 text-green-500", change: true },
+        { title: "Paid Orders", value: analytics?.totalOrders, icon: <ShoppingBag size={20} />, color: "bg-blue-500 text-blue-500", change: true },
+        { title: "Active Bag Sessions", value: analytics?.activeCartsCount, icon: <Clock size={20} />, color: "bg-orange-500 text-orange-500", change: false },
+        { title: "Abandoned Rate", value: `${Math.round((analytics?.abandonedCartsCount / (analytics?.totalOrders + analytics?.abandonedCartsCount)) * 100 || 0)}%`, icon: <AlertTriangle size={20} />, color: "bg-red-500 text-red-500", change: false },
     ];
 
     return (
-        <div className="space-y-12 animate-in fade-in duration-700">
-            <header className="flex justify-between items-end">
+        <div className="space-y-8 animate-in fade-in duration-700">
+            {/* Header Section */}
+            <div className="flex justify-between items-end">
                 <div>
-                    <h1 className="text-4xl font-serif text-preque-carbon dark:text-white mb-2">Business Intelligence</h1>
-                    <div className="flex items-center gap-3">
-                        <p className="text-[10px] tracking-[0.3em] uppercase text-gray-400 font-bold">Real-time Performance Architecture</p>
-                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                    </div>
+                    <h2 className="text-2xl font-serif text-preque-carbon dark:text-white">Overview</h2>
+                    <p className="text-xs text-gray-400 mt-1">Real-time performance metrics</p>
                 </div>
                 <div className="flex gap-4">
-                    <button onClick={fetchData} className="p-3 border border-black/5 dark:border-white/5 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 transition-colors group">
+                    <button onClick={fetchData} className="p-2 border border-black/5 dark:border-white/5 rounded-full hover:bg-gray-100 dark:hover:bg-white/5 transition-colors group bg-white dark:bg-black">
                         <RefreshCcw size={16} className="text-gray-400 group-hover:rotate-180 transition-transform duration-500" />
                     </button>
-                    <button className="px-6 py-2 bg-preque-carbon text-white dark:bg-white dark:text-black text-[10px] tracking-widest uppercase font-bold flex items-center gap-3 hover:opacity-90 transition-opacity">
+                    <button className="px-4 py-2 bg-preque-carbon text-white dark:bg-white dark:text-black text-[10px] tracking-widest uppercase font-bold flex items-center gap-3 hover:opacity-90 transition-opacity rounded-lg shadow-lg">
                         <Download size={14} /> Export Report
                     </button>
                 </div>
-            </header>
+            </div>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {statCards.map((stat, index) => (
-                    <div key={index} className="bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/5 p-8 rounded-sm shadow-sm hover:translate-y-[-4px] transition-all duration-300">
-                        <div className="flex justify-between items-center mb-6">
-                            <span className={`p-4 rounded-xl ${stat.color} shadow-lg shadow-${stat.color.split('-')[1]}-500/20`}>
-                                {stat.icon}
-                            </span>
-                            <TrendingUp size={16} className="text-green-500" />
+                    <div
+                        key={index}
+                        className="bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/5 p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group"
+                    >
+                        <div className={`absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity transform group-hover:scale-110 duration-500`}>
+                            {stat.icon}
                         </div>
-                        <h3 className="text-3xl font-bold text-preque-carbon dark:text-white mb-1 tracking-tight">{stat.value}</h3>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">{stat.title}</p>
+
+                        <div className="flex items-start justify-between mb-4">
+                            <div className={`p-3 rounded-lg ${stat.color} bg-opacity-10 text-${stat.color.split('-')[1]}-600 dark:text-${stat.color.split('-')[1]}-400`}>
+                                {stat.icon}
+                            </div>
+                            {stat.change && (
+                                <span className="flex items-center text-[10px] font-bold text-green-500 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-full">
+                                    <TrendingUp size={12} className="mr-1" /> +12%
+                                </span>
+                            )}
+                        </div>
+
+                        <div>
+                            <h3 className="text-2xl font-bold text-preque-carbon dark:text-white mb-1 tracking-tight">{stat.value}</h3>
+                            <p className="text-[11px] font-medium text-gray-400">{stat.title}</p>
+                        </div>
+
+                        {/* Progress Bar Mockup */}
+                        <div className="w-full bg-gray-100 dark:bg-white/5 h-1 mt-4 rounded-full overflow-hidden">
+                            <div className={`h-full ${stat.color} opacity-80 w-[70%] rounded-full`} />
+                        </div>
                     </div>
                 ))}
             </div>
@@ -175,8 +192,8 @@ export default function AdminDashboard() {
                                 </div>
                                 <div className="text-right">
                                     <span className={`text-[9px] font-bold uppercase px-3 py-1.5 rounded-sm ${item.status === 'Critical' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
-                                            item.status === 'Warning' ? 'bg-orange-500/10 text-orange-500 border border-orange-500/20' :
-                                                'bg-green-500/10 text-green-500 border border-green-500/20'
+                                        item.status === 'Warning' ? 'bg-orange-500/10 text-orange-500 border border-orange-500/20' :
+                                            'bg-green-500/10 text-green-500 border border-green-500/20'
                                         }`}>
                                         {item.daysRemaining} {item.daysRemaining === 1 ? 'Day' : 'Days'} Left
                                     </span>
@@ -261,8 +278,8 @@ export default function AdminDashboard() {
                                     <td className="p-6 text-sm font-bold text-preque-carbon dark:text-preque-beige">₹{order.totalPrice.toLocaleString()}</td>
                                     <td className="p-6">
                                         <span className={`px-4 py-1.5 rounded-sm text-[8px] font-bold uppercase tracking-[0.2em] shadow-sm ${order.status === 'Delivered' ? 'bg-green-100 text-green-700 dark:bg-green-900/30' :
-                                                order.status === 'Processing' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800' :
-                                                    'bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-white'
+                                            order.status === 'Processing' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-800' :
+                                                'bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-white'
                                             }`}>
                                             {order.status}
                                         </span>

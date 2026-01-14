@@ -47,6 +47,11 @@ export const couponAPI = {
     validate: (code) => api.post('/coupons/validate', { code }),
 };
 
+export const analyticsAPI = {
+    getDashboardStats: () => api.get('/analytics/dashboard'),
+    getInventoryForecast: () => api.get('/analytics/inventory'),
+};
+
 // Update productAPI to include reviews
 const originalProductAPI = { ...productAPI };
 productAPI.createReview = (id, reviewData) => api.post(`/products/${id}/reviews`, reviewData);
